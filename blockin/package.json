@@ -1,0 +1,19 @@
+{
+  "name": "blockin",
+  "version": "1.0.0",
+  "description": "Flexible Micro-Authorizations on the Algorand Blockchain",
+  "main": "src/blockin.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matt-davison/blockin.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/matt-davison/blockin/issues"
+  },
+  "homepage": "https://github.com/matt-davison/blockin#readme"
+}
