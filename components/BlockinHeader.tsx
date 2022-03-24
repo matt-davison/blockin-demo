@@ -1,4 +1,4 @@
-import { KeyIcon } from "./Icons"
+import { KeyIcon } from "./icons"
 
 const headerTitle = "BLOCKIN DEMO"
 

@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { CopyIcon, CloseIcon } from './Icons';
+import { CopyIcon, CloseIcon } from './icons';
 
 const copyText = (text: string) => {
     navigator.clipboard.writeText(text);

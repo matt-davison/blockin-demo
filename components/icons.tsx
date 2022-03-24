@@ -29,7 +29,7 @@ export const KeyIcon = () => {
   export const BitIcon = () => {
     return (
         <>
-        <svg className="w-32 h-10"  xmlns="http://www.w3.org/2000/svg" xmlSpace="preserve" width="100%" height="100%" version="1.1" shapeRendering="geometricPrecision" textRendering="geometricPrecision" imageRendering="optimizeQuality" fillRule="evenodd" clipRule="evenodd" viewBox="0 0 4257.46 889.51" xmlnsXlink="http://www.w3.org/1999/xlink" xmlnsXodm="http://www.corel.com/coreldraw/odm/2003">
+        <svg className="w-32 h-10"  xmlns="http://www.w3.org/2000/svg" xmlSpace="preserve" width="100%" height="100%" version="1.1" shapeRendering="geometricPrecision" textRendering="geometricPrecision" imageRendering="optimizeQuality" fillRule="evenodd" clipRule="evenodd" viewBox="0 0 4257.46 889.51" xmlnsXlink="http://www.w3.org/1999/xlink">
             <g id="Layer_x0020_1">
             <metadata id="CorelCorpID_0Corel-Layer"/>
             <g id="_1421487920208">

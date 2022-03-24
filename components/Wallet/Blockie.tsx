@@ -1,5 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
+import Image from 'next/image'
 
 interface IBlockieStyleProps {
   size?: number;
@@ -31,7 +32,7 @@ const Blockie = (props: IBlockieProps) => {
     .toDataURL();
   return (
     <SBlockieWrapper {...props} size={props.size}>
-      <img src={imgUrl} alt={props.address} />
+      <Image src={imgUrl} alt={props.address} />
     </SBlockieWrapper>
   );
 };
