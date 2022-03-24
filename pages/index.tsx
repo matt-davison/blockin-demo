@@ -7,7 +7,7 @@ export default function Home() {
       <Head>
         <title>{siteTitle}</title>
       </Head>
-      <section>
+      <section className='text-center p-10'>
         <p>A simple frontend implementation of the Blockin library</p>
       </section>
     </Layout>
