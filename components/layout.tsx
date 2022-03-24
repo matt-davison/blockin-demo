@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Image from 'next/image'
+import Header from './header'
 
-const name = 'Blockin Foundation'
 export const siteTitle = 'Blockin Demo'
 
 export default function Layout({
@@ -18,16 +18,7 @@ export default function Layout({
           content="Basic frontend implementation of Blockin library"
         />
       </Head>
-      <header>
-          <Image
-            priority
-            src="/images/profile.jpg"
-            height={144}
-            width={144}
-            alt={name}
-          />
-          <h1>{name}</h1>
-      </header>
+      <Header />
       <main>{children}</main>
     </div>
   )
