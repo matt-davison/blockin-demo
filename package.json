@@ -11,11 +11,12 @@
   "author": "WalletConnect <walletconnect.org>",
   "license": "LGPL-3.0",
   "scripts": {
-    "start": "react-scripts-ts start",
-    "build": "react-scripts-ts build",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
     "test": "react-scripts-ts test --env=jsdom",
-    "eject": "react-scripts-ts eject",
-    "lint": "eslint -c './.eslintrc' --fix './src/**/*{.ts,.tsx}'"
+    "eject": "react-scripts-ts eject"
   },
   "repository": {
     "type": "git",
@@ -25,24 +26,35 @@
     "url": "https://github.com/algorand/walletconnect-example-dapp/issues"
   },
   "dependencies": {
-    "@json-rpc-tools/utils": "^1.7.5",
-    "@walletconnect/client": "^1.6.5",
-    "algorand-walletconnect-qrcode-modal": "^1.6.1",
-    "algosdk": "^1.11.1",
+    "@json-rpc-tools/utils": "^1.7.6",
+    "@walletconnect/client": "^1.7.5",
+    "algorand-walletconnect-qrcode-modal": "^1.7.4",
+    "algosdk": "^1.15.0",
     "blockies-ts": "^1.0.0",
+    "gray-matter": "^4.0.2",
+    "jso": "^4.1.1",
+    "next": "latest",
     "prop-types": "^15.7.2",
     "qr-image": "^3.2.0",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
     "react-scripts-ts": "^4.0.8",
+    "remark": "^14.0.1",
+    "remark-html": "^15.0.0",
     "styled-components": "^5.2.0"
   },
   "devDependencies": {
+    "@types/node": "^17.0.23",
+    "@types/react": "^17.0.42",
+    "autoprefixer": "^10.4.4",
+    "eslint": "8.11.0",
+    "eslint-config-next": "12.1.0",
+    "postcss": "^8.4.12",
+    "tailwindcss": "^3.0.23",
+    "typescript": "^4.6.2",
     "@types/jest": "^24.0.25",
-    "@types/node": "^13.1.6",
     "@types/prop-types": "^15.7.3",
     "@types/qr-image": "^3.2.3",
-    "@types/react": "^16.9.51",
     "@types/react-dom": "^16.9.8",
     "@types/styled-components": "^5.1.3",
     "@typescript-eslint/eslint-plugin": "^2.20.0",
@@ -55,8 +67,7 @@
     "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "prettier": "^1.19.1",
-    "typescript": "^4.2.4"
+    "prettier": "^1.19.1"
   },
   "eslintConfig": {
     "extends": "react-app"

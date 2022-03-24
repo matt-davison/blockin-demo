@@ -1,14 +1,24 @@
 {
   "compilerOptions": {
+    "strict": false,
+    "noEmit": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
     "baseUrl": ".",
     "outDir": "build/dist",
     "module": "esnext",
     "target": "es5",
-    "lib": ["es7", "dom"],
+    "lib": [
+      "es7",
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "skipLibCheck": true,
     "sourceMap": true,
     "allowJs": true,
-    "jsx": "react",
+    "jsx": "preserve",
     "moduleResolution": "node",
     "rootDir": "src",
     "forceConsistentCasingInFileNames": true,
@@ -21,7 +31,10 @@
     "suppressImplicitAnyIndexErrors": true,
     "noUnusedLocals": true,
     "resolveJsonModule": true,
-    "types": ["react", "jest"]
+    "types": [
+      "react",
+      "jest"
+    ]
   },
   "exclude": [
     "node_modules",
@@ -31,5 +44,10 @@
     "webpack",
     "jest",
     "src/setupTests.ts"
+  ],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
   ]
 }
