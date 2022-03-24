@@ -11,7 +11,7 @@
     "@walletconnect/client": "^1.7.5",
     "algorand-walletconnect-qrcode-modal": "^1.7.4",
     "algosdk": "^1.15.0",
-    "date-fns": "^2.11.1",
+    "@jso": "^2.11.1",
     "gray-matter": "^4.0.2",
     "next": "latest",
     "react": "17.0.2",
