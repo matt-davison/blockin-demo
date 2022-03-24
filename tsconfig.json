@@ -1,30 +1,53 @@
 {
   "compilerOptions": {
+    "strict": false,
+    "noEmit": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "outDir": "build/dist",
+    "module": "esnext",
     "target": "es5",
     "lib": [
+      "es7",
       "dom",
       "dom.iterable",
       "esnext"
     ],
-    "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
-    "incremental": true,
-    "esModuleInterop": true,
-    "module": "esnext",
+    "sourceMap": true,
+    "allowJs": true,
+    "jsx": "preserve",
     "moduleResolution": "node",
+    "rootDir": "./",
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
+    "importHelpers": true,
+    "strictNullChecks": true,
+    "allowSyntheticDefaultImports": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "noUnusedLocals": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve"
+    "types": [
+      "react",
+      "jest"
+    ]
   },
+  "exclude": [
+    "node_modules",
+    "build",
+    "scripts",
+    "acceptance-tests",
+    "webpack",
+    "jest",
+    "src/setupTests.ts"
+  ],
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules"
   ]
 }

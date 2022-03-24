@@ -1,1 +1,19 @@
-This is a starter template for [Learn Next.js](https://nextjs.org/learn).
+# WalletConnect Example Dapp
+
+## Develop
+
+```bash
+npm run start
+```
+
+## Test
+
+```bash
+npm run test
+```
+
+## Build
+
+```bash
+npm run build
+```
