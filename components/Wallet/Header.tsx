@@ -2,9 +2,9 @@ import * as React from "react";
 import styled from "styled-components";
 import * as PropTypes from "prop-types";
 import Blockie from "./Blockie";
-import { ellipseAddress } from "../helpers/utilities";
-import { transitions } from "../styles";
-import { ChainType } from "src/helpers/api";
+import { ellipseAddress } from "../../helpers/utilities";
+import { transitions } from "../../styles";
+import { ChainType } from "../../helpers/api";
 
 const SHeader = styled.div`
   margin-top: -1px;

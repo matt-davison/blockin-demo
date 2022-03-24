@@ -1,6 +1,7 @@
 import Head from 'next/head'
-import Image from 'next/image'
-import Header from './header'
+import { useState } from 'react'
+import BlockinHeader from './BlockinHeader';
+import DonateCard from './DonateCard';
 
 export const siteTitle = 'Blockin Demo'
 
@@ -9,6 +10,8 @@ export default function Layout({
 }: {
   children: React.ReactNode
 }) {
+  const [donatePopup, toggleDonatePopup] = useState(false)
+  
   return (
     <div>
       <Head>
@@ -18,8 +21,13 @@ export default function Layout({
           content="Basic frontend implementation of Blockin library"
         />
       </Head>
-      <Header />
-      <main>{children}</main>
+      { donatePopup ?
+        <DonateCard togglePopup={toggleDonatePopup} /> :
+        <>
+          <BlockinHeader togglePopup={toggleDonatePopup} />
+          <main>{children}</main>
+        </>
+      }
     </div>
   )
 }

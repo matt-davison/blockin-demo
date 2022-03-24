@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
 import Loader from "./Loader";
-import { colors, fonts, shadows, transitions } from "../styles";
+import { colors, fonts, shadows, transitions } from "../../styles";
 
 interface IButtonStyleProps {
   fetching: boolean;

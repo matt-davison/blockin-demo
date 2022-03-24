@@ -1,21 +1,23 @@
 import * as React from "react";
+import { createGlobalStyle } from "styled-components";
 import styled from "styled-components";
 import WalletConnect from "@walletconnect/client";
 import QRCodeModal from "algorand-walletconnect-qrcode-modal";
 import { IInternalEvent } from "@walletconnect/types";
 import { formatJsonRpcRequest } from "@json-rpc-tools/utils";
 import algosdk from "algosdk";
-import Button from "./components/Button";
-import Column from "./components/Column";
-import Wrapper from "./components/Wrapper";
-import Modal from "./components/Modal";
-import Header from "./components/Header";
-import Loader from "./components/Loader";
-import { fonts } from "./styles";
-import { apiGetAccountAssets, apiSubmitTransactions, ChainType } from "./helpers/api";
-import { IAssetData, IWalletTransaction, SignTxnParams } from "./helpers/types";
-import AccountAssets from "./components/AccountAssets";
-import { Scenario, scenarios, signTxnWithTestAccount } from "./scenarios";
+import Button from "./Button";
+import Column from "./Column";
+import Wrapper from "./Wrapper";
+import Modal from "./Modal";
+import Header from "./Header";
+import Loader from "./Loader";
+import { fonts } from "../../styles";
+import { apiGetAccountAssets, apiSubmitTransactions, ChainType } from "../../helpers/api";
+import { IAssetData, IWalletTransaction, SignTxnParams } from "../../helpers/types";
+import AccountAssets from "./AccountAssets";
+import { Scenario, scenarios, signTxnWithTestAccount } from "../../scenarios";
+import { globalStyle } from "../../styles";
 
 const SLayout = styled.div`
   position: relative;
@@ -169,7 +171,14 @@ const INITIAL_STATE: IAppState = {
   assets: [],
 };
 
-class App extends React.Component<unknown, IAppState> {
+declare global {
+  // tslint:disable-next-line
+  interface Window {
+    blockies: any;
+  }
+}
+
+class Wallet extends React.Component<unknown, IAppState> {
   public state: IAppState = {
     ...INITIAL_STATE,
   };
@@ -192,6 +201,7 @@ class App extends React.Component<unknown, IAppState> {
     // subscribe to events
     await this.subscribeToEvents();
   };
+
   public subscribeToEvents = () => {
     const { connector } = this.state;
 
@@ -488,117 +498,122 @@ class App extends React.Component<unknown, IAppState> {
       pendingSubmissions,
       result,
     } = this.state;
+    const GlobalStyle = createGlobalStyle`${globalStyle}`;
+
     return (
-      <SLayout>
-        <Column maxWidth={1000} spanHeight>
-          <Header
-            connected={connected}
-            address={address}
-            killSession={this.killSession}
-            chain={chain}
-            chainUpdate={this.chainUpdate}
-          />
-          <SContent>
-            {!address && !assets.length ? (
-              <SLanding center>
-                <h3>{`Algorand WalletConnect v${process.env.REACT_APP_VERSION} Demo`}</h3>
-                <SButtonContainer>
-                  <SConnectButton left onClick={this.walletConnectInit} fetching={fetching}>
-                    {"Connect to WalletConnect"}
-                  </SConnectButton>
-                </SButtonContainer>
-              </SLanding>
-            ) : (
-              <SBalances>
-                <h3>Balances</h3>
-                {!fetching ? (
-                  <AccountAssets assets={assets} />
-                ) : (
+      <>
+        <GlobalStyle />
+        <SLayout>
+          <Column maxWidth={1000} spanHeight>
+            <Header
+              connected={connected}
+              address={address}
+              killSession={this.killSession}
+              chain={chain}
+              chainUpdate={this.chainUpdate}
+            />
+            <SContent>
+              {!address && !assets.length ? (
+                <SLanding center>
+                  <h3>{`Algorand WalletConnect v1.15 Demo`}</h3>
+                  <SButtonContainer>
+                    <SConnectButton left onClick={this.walletConnectInit} fetching={fetching}>
+                      {"Connect to WalletConnect"}
+                    </SConnectButton>
+                  </SButtonContainer>
+                </SLanding>
+              ) : (
+                <SBalances>
+                  <h3>Balances</h3>
+                  {!fetching ? (
+                    <AccountAssets assets={assets} />
+                  ) : (
+                    <Column center>
+                      <SContainer>
+                        <Loader />
+                      </SContainer>
+                    </Column>
+                  )}
+                  <h3>Actions</h3>
                   <Column center>
-                    <SContainer>
-                      <Loader />
-                    </SContainer>
-                  </Column>
-                )}
-                <h3>Actions</h3>
-                <Column center>
-                  <STestButtonContainer>
-                    {scenarios.map(({ name, scenario }) => (
-                      <STestButton left key={name} onClick={() => this.signTxnScenario(scenario)}>
-                        {name}
-                      </STestButton>
-                    ))}
-                  </STestButtonContainer>
-                </Column>
-              </SBalances>
-            )}
-          </SContent>
-        </Column>
-        <Modal show={showModal} toggleModal={this.toggleModal}>
-          {pendingRequest ? (
-            <SModalContainer>
-              <SModalTitle>{"Pending Call Request"}</SModalTitle>
-              <SContainer>
-                <Loader />
-                <SModalParagraph>{"Approve or reject request using your wallet"}</SModalParagraph>
-              </SContainer>
-            </SModalContainer>
-          ) : result ? (
-            <SModalContainer>
-              <SModalTitle>{"Call Request Approved"}</SModalTitle>
-              <STable>
-                <SRow>
-                  <SKey>Method</SKey>
-                  <SValue>{result.method}</SValue>
-                </SRow>
-                {result.body.map((signedTxns, index) => (
-                  <SRow key={index}>
-                    <SKey>{`Atomic group ${index}`}</SKey>
-                    <SValue>
-                      {signedTxns.map((txn, txnIndex) => (
-                        <div key={txnIndex}>
-                          {!!txn?.txID && <p>TxID: {txn.txID}</p>}
-                          {!!txn?.signature && <p>Sig: {txn.signature}</p>}
-                          {!!txn?.signingAddress && <p>AuthAddr: {txn.signingAddress}</p>}
-                        </div>
+                    <STestButtonContainer>
+                      {scenarios.map(({ name, scenario }) => (
+                        <STestButton left key={name} onClick={() => this.signTxnScenario(scenario)}>
+                          {name}
+                        </STestButton>
                       ))}
-                    </SValue>
+                    </STestButtonContainer>
+                  </Column>
+                </SBalances>
+              )}
+            </SContent>
+          </Column>
+          <Modal show={showModal} toggleModal={this.toggleModal}>
+            {pendingRequest ? (
+              <SModalContainer>
+                <SModalTitle>{"Pending Call Request"}</SModalTitle>
+                <SContainer>
+                  <Loader />
+                  <SModalParagraph>{"Approve or reject request using your wallet"}</SModalParagraph>
+                </SContainer>
+              </SModalContainer>
+            ) : result ? (
+              <SModalContainer>
+                <SModalTitle>{"Call Request Approved"}</SModalTitle>
+                <STable>
+                  <SRow>
+                    <SKey>Method</SKey>
+                    <SValue>{result.method}</SValue>
                   </SRow>
-                ))}
-              </STable>
-              <SModalButton
-                onClick={() => this.submitSignedTransaction()}
-                disabled={pendingSubmissions.length !== 0}
-              >
-                {"Submit transaction to network."}
-              </SModalButton>
-              {pendingSubmissions.map((submissionInfo, index) => {
-                const key = `${index}:${
-                  typeof submissionInfo === "number" ? submissionInfo : "err"
-                }`;
-                const prefix = `Txn Group ${index}: `;
-                let content: string;
+                  {result.body.map((signedTxns, index) => (
+                    <SRow key={index}>
+                      <SKey>{`Atomic group ${index}`}</SKey>
+                      <SValue>
+                        {signedTxns.map((txn, txnIndex) => (
+                          <div key={txnIndex}>
+                            {!!txn?.txID && <p>TxID: {txn.txID}</p>}
+                            {!!txn?.signature && <p>Sig: {txn.signature}</p>}
+                            {!!txn?.signingAddress && <p>AuthAddr: {txn.signingAddress}</p>}
+                          </div>
+                        ))}
+                      </SValue>
+                    </SRow>
+                  ))}
+                </STable>
+                <SModalButton
+                  onClick={() => this.submitSignedTransaction()}
+                  disabled={pendingSubmissions.length !== 0}
+                >
+                  {"Submit transaction to network."}
+                </SModalButton>
+                {pendingSubmissions.map((submissionInfo, index) => {
+                  const key = `${index}:${
+                    typeof submissionInfo === "number" ? submissionInfo : "err"
+                  }`;
+                  const prefix = `Txn Group ${index}: `;
+                  let content: string;
 
-                if (submissionInfo === 0) {
-                  content = "Submitting...";
-                } else if (typeof submissionInfo === "number") {
-                  content = `Confirmed at round ${submissionInfo}`;
-                } else {
-                  content = "Rejected by network. See console for more information.";
-                }
+                  if (submissionInfo === 0) {
+                    content = "Submitting...";
+                  } else if (typeof submissionInfo === "number") {
+                    content = `Confirmed at round ${submissionInfo}`;
+                  } else {
+                    content = "Rejected by network. See console for more information.";
+                  }
 
-                return <SModalTitle key={key}>{prefix + content}</SModalTitle>;
-              })}
-            </SModalContainer>
-          ) : (
-            <SModalContainer>
-              <SModalTitle>{"Call Request Rejected"}</SModalTitle>
-            </SModalContainer>
-          )}
-        </Modal>
-      </SLayout>
+                  return <SModalTitle key={key}>{prefix + content}</SModalTitle>;
+                })}
+              </SModalContainer>
+            ) : (
+              <SModalContainer>
+                <SModalTitle>{"Call Request Rejected"}</SModalTitle>
+              </SModalContainer>
+            )}
+          </Modal>
+        </SLayout>
+      </>
     );
   };
 }
 
-export default App;
+export default Wallet

@@ -2,9 +2,9 @@ import * as React from "react";
 import styled from "styled-components";
 import Icon from "./Icon";
 import ASAIcon from "./ASAIcon";
-import algo from "../assets/algo.svg";
-import { formatBigNumWithDecimals } from "../helpers/utilities";
-import { IAssetData } from "../helpers/types";
+import algo from "../../assets/algo.svg";
+import { formatBigNumWithDecimals } from "../../helpers/utilities";
+import { IAssetData } from "../../helpers/types";
 
 const SAssetRow = styled.div`
   width: 100%;

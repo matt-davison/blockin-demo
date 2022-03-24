@@ -1,7 +1,7 @@
 import * as React from "react";
 import Column from "./Column";
 import AssetRow from "./AssetRow";
-import { IAssetData } from "../helpers/types";
+import { IAssetData } from "../../helpers/types";
 
 const AccountAssets = (props: { assets: IAssetData[] }) => {
   const { assets } = props;
