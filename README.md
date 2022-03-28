@@ -7,3 +7,22 @@ Also recommended to get the [Algorand VSCode Extension](https://marketplace.visu
 ## Running
 "cd sandbox"
 "./sandbox up"
+# WalletConnect Example Dapp
+
+## Develop
+
+```bash
+npm run start
+```
+
+## Test
+
+```bash
+npm run test
+```
+
+## Build
+
+```bash
+npm run build
+```
