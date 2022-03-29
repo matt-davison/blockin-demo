@@ -1,132 +1,15 @@
 import * as React from "react";
-import { createGlobalStyle } from "styled-components";
-import styled from "styled-components";
 import WalletConnect from "@walletconnect/client";
 import QRCodeModal from "algorand-walletconnect-qrcode-modal";
 import { IInternalEvent } from "@walletconnect/types";
 import { formatJsonRpcRequest } from "@json-rpc-tools/utils";
 import algosdk from "algosdk";
-import Button from "./Button";
-import Column from "./Column";
-import Wrapper from "./Wrapper";
 import Modal from "./Modal";
 import Header from "./Header";
-import Loader from "./Loader";
-import { fonts } from "../../styles";
 import { apiGetAccountAssets, apiSubmitTransactions, ChainType } from "../../helpers/api";
 import { IAssetData, IWalletTransaction, SignTxnParams } from "../../helpers/types";
 import AccountAssets from "./AccountAssets";
 import { Scenario, scenarios, signTxnWithTestAccount } from "../../scenarios";
-import { globalStyle } from "../../styles";
-
-const SLayout = styled.div`
-  position: relative;
-  width: 100%;
-  /* height: 100%; */
-  min-height: 100vh;
-  text-align: center;
-`;
-
-const SContent = styled(Wrapper as any)`
-  width: 100%;
-  height: 100%;
-  padding: 0 16px;
-`;
-
-const SLanding = styled(Column as any)`
-  height: 600px;
-`;
-
-const SButtonContainer = styled(Column as any)`
-  width: 250px;
-  margin: 50px 0;
-`;
-
-const SConnectButton = styled(Button as any)`
-  border-radius: 8px;
-  font-size: ${fonts.size.medium};
-  height: 44px;
-  width: 100%;
-  margin: 12px 0;
-`;
-
-const SContainer = styled.div`
-  height: 100%;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  word-break: break-word;
-`;
-
-const SModalContainer = styled.div`
-  width: 100%;
-  position: relative;
-  word-wrap: break-word;
-`;
-
-const SModalTitle = styled.div`
-  margin: 1em 0;
-  font-size: 20px;
-  font-weight: 700;
-`;
-
-const SModalButton = styled.button`
-  margin: 1em 0;
-  font-size: 18px;
-  font-weight: 700;
-`;
-
-const SModalParagraph = styled.p`
-  margin-top: 30px;
-`;
-
-// @ts-ignore
-const SBalances = styled(SLanding as any)`
-  height: 100%;
-  & h3 {
-    padding-top: 30px;
-  }
-`;
-
-const STable = styled(SContainer as any)`
-  flex-direction: column;
-  text-align: left;
-`;
-
-const SRow = styled.div`
-  width: 100%;
-  display: flex;
-  margin: 6px 0;
-`;
-
-const SKey = styled.div`
-  width: 30%;
-  font-weight: 700;
-`;
-
-const SValue = styled.div`
-  width: 70%;
-  font-family: monospace;
-`;
-
-const STestButtonContainer = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-`;
-
-const STestButton = styled(Button as any)`
-  border-radius: 8px;
-  font-size: ${fonts.size.medium};
-  height: 64px;
-  width: 100%;
-  max-width: 175px;
-  margin: 12px;
-`;
 
 interface IResult {
   method: string;
@@ -498,13 +381,11 @@ class Wallet extends React.Component<unknown, IAppState> {
       pendingSubmissions,
       result,
     } = this.state;
-    const GlobalStyle = createGlobalStyle`${globalStyle}`;
 
     return (
       <>
-        <GlobalStyle />
-        <SLayout>
-          <Column maxWidth={1000} spanHeight>
+        <div className="relative">
+          <div>
             <Header
               connected={connected}
               address={address}
@@ -512,63 +393,54 @@ class Wallet extends React.Component<unknown, IAppState> {
               chain={chain}
               chainUpdate={this.chainUpdate}
             />
-            <SContent>
-              {!address && !assets.length ? (
-                <SLanding center>
-                  <h3>{`Algorand WalletConnect v1.15 Demo`}</h3>
-                  <SButtonContainer>
-                    <SConnectButton left onClick={this.walletConnectInit} fetching={fetching}>
-                      {"Connect to WalletConnect"}
-                    </SConnectButton>
-                  </SButtonContainer>
-                </SLanding>
-              ) : (
-                <SBalances>
+            <div>
+              {fetching && <p>Loading...</p>}
+              {!address && !assets.length ? 
+                <div className="bg-gray-100">
+                  <h3>Sign in to WalletConnect to get started</h3>
+                  <button onClick={this.walletConnectInit} className='bg-blue-500 rounded-xl text-white px-3 py-2 my-3'>
+                    Connect to WalletConnect
+                  </button>
+                </div> : 
+                <div className="border-2 border-black">
                   <h3>Balances</h3>
-                  {!fetching ? (
-                    <AccountAssets assets={assets} />
-                  ) : (
-                    <Column center>
-                      <SContainer>
-                        <Loader />
-                      </SContainer>
-                    </Column>
-                  )}
+                  <AccountAssets assets={assets} />
                   <h3>Actions</h3>
-                  <Column center>
-                    <STestButtonContainer>
-                      {scenarios.map(({ name, scenario }) => (
-                        <STestButton left key={name} onClick={() => this.signTxnScenario(scenario)}>
-                          {name}
-                        </STestButton>
-                      ))}
-                    </STestButtonContainer>
-                  </Column>
-                </SBalances>
-              )}
-            </SContent>
-          </Column>
+                  <div className="bg-gray-200">
+                    {scenarios.map(({ name, scenario }) => (
+                      <button className='bg-blue-500 rounded-xl text-white px-3 py-2 m-3'
+                        key={name} 
+                        onClick={() => this.signTxnScenario(scenario)}>
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
           <Modal show={showModal} toggleModal={this.toggleModal}>
             {pendingRequest ? (
-              <SModalContainer>
-                <SModalTitle>{"Pending Call Request"}</SModalTitle>
-                <SContainer>
-                  <Loader />
-                  <SModalParagraph>{"Approve or reject request using your wallet"}</SModalParagraph>
-                </SContainer>
-              </SModalContainer>
+              <div className=" relative">
+                <h1>Pending Call Request</h1>
+                <div>
+                  <p>Loading...</p>
+                  <p>Approve or reject request using your wallet</p>
+                </div>
+              </div>
             ) : result ? (
-              <SModalContainer>
-                <SModalTitle>{"Call Request Approved"}</SModalTitle>
-                <STable>
-                  <SRow>
-                    <SKey>Method</SKey>
-                    <SValue>{result.method}</SValue>
-                  </SRow>
+              <div className="relative">
+                <h1>Call Request Approved</h1>
+                <table>
+                  <tr>
+                    <th>Method</th>
+                    <th>{result.method}</th>
+                  </tr>
                   {result.body.map((signedTxns, index) => (
-                    <SRow key={index}>
-                      <SKey>{`Atomic group ${index}`}</SKey>
-                      <SValue>
+                    <tr key={index}>
+                      <th>{`Atomic group ${index}`}</th>
+                      <th>
                         {signedTxns.map((txn, txnIndex) => (
                           <div key={txnIndex}>
                             {!!txn?.txID && <p>TxID: {txn.txID}</p>}
@@ -576,16 +448,16 @@ class Wallet extends React.Component<unknown, IAppState> {
                             {!!txn?.signingAddress && <p>AuthAddr: {txn.signingAddress}</p>}
                           </div>
                         ))}
-                      </SValue>
-                    </SRow>
+                      </th>
+                    </tr>
                   ))}
-                </STable>
-                <SModalButton
+                </table>
+                <button
                   onClick={() => this.submitSignedTransaction()}
                   disabled={pendingSubmissions.length !== 0}
                 >
-                  {"Submit transaction to network."}
-                </SModalButton>
+                  Submit transaction to network.
+                </button>
                 {pendingSubmissions.map((submissionInfo, index) => {
                   const key = `${index}:${
                     typeof submissionInfo === "number" ? submissionInfo : "err"
@@ -601,16 +473,16 @@ class Wallet extends React.Component<unknown, IAppState> {
                     content = "Rejected by network. See console for more information.";
                   }
 
-                  return <SModalTitle key={key}>{prefix + content}</SModalTitle>;
+                  return <h1 key={key}>{prefix + content}</h1>;
                 })}
-              </SModalContainer>
+              </div>
             ) : (
-              <SModalContainer>
-                <SModalTitle>{"Call Request Rejected"}</SModalTitle>
-              </SModalContainer>
+              <div className="relative">
+                <h1>Call Request Rejected</h1>
+              </div>
             )}
           </Modal>
-        </SLayout>
+        </div>
       </>
     );
   };

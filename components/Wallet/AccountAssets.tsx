@@ -1,7 +1,5 @@
-import * as React from "react";
-import Column from "./Column";
-import AssetRow from "./AssetRow";
 import { IAssetData } from "../../helpers/types";
+import { formatBigNumWithDecimals } from "../../helpers/utilities";
 
 const AccountAssets = (props: { assets: IAssetData[] }) => {
   const { assets } = props;
@@ -19,12 +17,21 @@ const AccountAssets = (props: { assets: IAssetData[] }) => {
   const tokens = assets.filter((asset: IAssetData) => asset && asset.id !== 0);
 
   return (
-    <Column center>
-      <AssetRow key={nativeCurrency.id} asset={nativeCurrency} />
+    <div>
+      <div key={nativeCurrency.id} className="flex mx-5">
+        <p>Asset Name: &nbsp; {nativeCurrency.name}</p>
+        <div className="flex-grow" />
+        <p>{`${formatBigNumWithDecimals(nativeCurrency.amount, nativeCurrency.decimals)} ${nativeCurrency.unitName || "units"}`}</p>
+      </div>
+
       {tokens.map(token => (
-        <AssetRow key={token.id} asset={token} />
+        <div key={token.id} className="flex mx-5">
+          <p>Asset Name: &nbsp; {token.name}</p>
+          <div className="flex-grow" />
+          <p>{`${formatBigNumWithDecimals(token.amount, token.decimals)} ${token.unitName || "units"}`}</p>
+        </div>
       ))}
-    </Column>
+    </div>
   );
 };
 
