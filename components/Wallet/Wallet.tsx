@@ -9,6 +9,7 @@ import { apiGetAccountAssets, apiSubmitTransactions, ChainType } from "../../hel
 import { IAssetData, IWalletTransaction, SignTxnParams } from "../../helpers/types";
 import { Scenario, scenarios, signTxnWithTestAccount } from "../../scenarios";
 import { ellipseAddress, formatBigNumWithDecimals } from "helpers/utilities";
+import { useState } from "react";
 
 interface IResult {
   method: string;
@@ -60,19 +61,19 @@ declare global {
   }
 }
 
-class Wallet extends React.Component<unknown, IAppState> {
-  public state: IAppState = {
-    ...INITIAL_STATE,
-  };
+const Wallet = () => {
+  const [state, setState] = useState<IAppState>({ ...INITIAL_STATE });
 
-  public walletConnectInit = async () => {
+  const walletConnectInit = async () => {
     // bridge url
     const bridge = "https://bridge.walletconnect.org";
 
     // create new connector
     const connector = new WalletConnect({ bridge, qrcodeModal: QRCodeModal });
 
-    await this.setState({ connector });
+    await setState((prevState: IAppState) => {
+      return { ...prevState, connector };
+    });
 
     // check if already connected
     if (!connector.connected) {
@@ -81,17 +82,16 @@ class Wallet extends React.Component<unknown, IAppState> {
     }
 
     // subscribe to events
-    await this.subscribeToEvents();
+    await subscribeToEvents();
   };
 
-  public subscribeToEvents = () => {
-    const { connector } = this.state;
-
+  const subscribeToEvents = () => {
+    const { connector } = state;
     if (!connector) {
       return;
     }
 
-    connector.on("session_update", async (error, payload) => {
+    connector.on("session_update", async (error: any, payload: any) => {
       console.log(`connector.on("session_update")`);
 
       if (error) {
@@ -99,102 +99,115 @@ class Wallet extends React.Component<unknown, IAppState> {
       }
 
       const { accounts } = payload.params[0];
-      this.onSessionUpdate(accounts);
+      onSessionUpdate(accounts);
     });
 
-    connector.on("connect", (error, payload) => {
+    connector.on("connect", (error: any, payload: any) => {
       console.log(`connector.on("connect")`);
 
       if (error) {
         throw error;
       }
 
-      this.onConnect(payload);
+      onConnect(payload);
     });
 
-    connector.on("disconnect", (error, payload) => {
+    connector.on("disconnect", (error: any, payload: any) => {
       console.log(`connector.on("disconnect")`);
 
       if (error) {
         throw error;
       }
 
-      this.onDisconnect();
+      onDisconnect();
     });
 
     if (connector.connected) {
       const { accounts } = connector;
       const address = accounts[0];
-      this.setState({
-        connected: true,
-        accounts,
-        address,
+      setState((prevState: IAppState) => {
+        return { ...prevState, connected: true, accounts, address };
       });
-      this.onSessionUpdate(accounts);
+      onSessionUpdate(accounts);
     }
 
-    this.setState({ connector });
+    setState((prevState: IAppState) => {
+      return { ...prevState, connector };
+    });
   };
 
-  public killSession = async () => {
-    const { connector } = this.state;
+  const killSession = async () => {
+    const { connector } = state;
     if (connector) {
       connector.killSession();
     }
-    this.resetApp();
+    resetApp();
   };
 
-  public chainUpdate = (newChain: ChainType) => {
-    this.setState({ chain: newChain }, this.getAccountAssets);
+  const chainUpdate = (newChain: ChainType) => {
+    setState((prevState: IAppState) => {
+      return { ...prevState, chain: newChain };
+    });
+    getAccountAssets();
   };
 
-  public resetApp = async () => {
-    await this.setState({ ...INITIAL_STATE });
+  const resetApp = async () => {
+    await setState({ ...INITIAL_STATE });
   };
 
-  public onConnect = async (payload: IInternalEvent) => {
+  const onConnect = async (payload: IInternalEvent) => {
     const { accounts } = payload.params[0];
     const address = accounts[0];
-    await this.setState({
-      connected: true,
-      accounts,
-      address,
+    await setState((prevState: IAppState) => {
+      return { ...prevState, connected: true, accounts, address };
     });
-    this.getAccountAssets();
+    getAccountAssets();
   };
 
-  public onDisconnect = async () => {
-    this.resetApp();
+  const onDisconnect = async () => {
+    resetApp();
   };
 
-  public onSessionUpdate = async (accounts: string[]) => {
+  const onSessionUpdate = async (accounts: string[]) => {
     const address = accounts[0];
-    await this.setState({ accounts, address });
-    await this.getAccountAssets();
+    await setState((prevState: IAppState) => {
+      return { ...prevState, accounts, address };
+    });
+    await getAccountAssets();
   };
 
-  public getAccountAssets = async () => {
-    const { address, chain } = this.state;
-    this.setState({ fetching: true });
+  const getAccountAssets = async () => {
+    const { address, chain } = state;
+    setState((prevState: IAppState) => {
+      return { ...prevState, fetching: true };
+    });
+
     try {
       // get account balances
       const assets = await apiGetAccountAssets(chain, address);
 
-      await this.setState({ fetching: false, address, assets });
+      await setState((prevState: IAppState) => {
+        return { ...prevState, fetching: false, address, assets };
+      });
     } catch (error) {
       console.error(error);
-      await this.setState({ fetching: false });
+      await setState((prevState: IAppState) => {
+        return { ...prevState, fetching: false };
+      });
     }
   };
 
-  public toggleModal = () =>
-    this.setState({
-      showModal: !this.state.showModal,
-      pendingSubmissions: [],
-    });
+  const toggleModal = () =>
+    setState((prevState: IAppState) => {
+      return {
+        ...prevState,
+        showModal: !state.showModal,
+        pendingSubmissions: [],
+      }
+    })
 
-  public signTxnScenario = async (scenario: Scenario) => {
-    const { connector, address, chain } = this.state;
+  const signTxnScenario = async (scenario: Scenario) => {
+    const { connector, address, chain } = state;
 
     if (!connector) {
       return;
@@ -204,10 +217,12 @@ class Wallet extends React.Component<unknown, IAppState> {
       const txnsToSign = await scenario(chain, address);
 
       // open modal
-      this.toggleModal();
+      toggleModal();
 
       // toggle pending request indicator
-      this.setState({ pendingRequest: true });
+      setState((prevState: IAppState) => {
+        return { ...prevState, pendingRequest: true };
+      });
 
       const flatTxns = txnsToSign.reduce((acc, val) => acc.concat(val), []);
 
@@ -315,33 +330,41 @@ class Wallet extends React.Component<unknown, IAppState> {
       };
 
       // display result
-      this.setState({
-        connector,
-        pendingRequest: false,
-        signedTxns,
-        result: formattedResult,
+      setState((prevState: IAppState) => {
+        return {
+          ...prevState,
+          connector,
+          pendingRequest: false,
+          signedTxns,
+          result: formattedResult,
+        };
       });
     } catch (error) {
       console.error(error);
-      this.setState({ connector, pendingRequest: false, result: null });
+      setState((prevState: IAppState) => {
+        return { ...prevState, connector, pendingRequest: false, result: null };
+      });
     }
   };
 
-  public async submitSignedTransaction() {
-    const { signedTxns, chain } = this.state;
+  const submitSignedTransaction = async () => {
+    const { signedTxns, chain } = state;
     if (signedTxns == null) {
       throw new Error("Transactions to submit are null");
     }
 
-    this.setState({ pendingSubmissions: signedTxns.map(() => 0) });
+    setState((prevState: IAppState) => {
+      return { ...prevState, pendingSubmissions: signedTxns.map(() => 0) };
+    });
 
-    signedTxns.forEach(async (signedTxn, index) => {
+    signedTxns.forEach(async (signedTxn: any, index: any) => {
       try {
         const confirmedRound = await apiSubmitTransactions(chain, signedTxn);
 
-        this.setState(prevState => {
+        setState((prevState: IAppState) => {
           return {
-            pendingSubmissions: prevState.pendingSubmissions.map((v, i) => {
+            ...prevState,
+            pendingSubmissions: prevState.pendingSubmissions.map((v: any, i: any) => {
               if (index === i) {
                 return confirmedRound;
               }
@@ -352,9 +375,10 @@ class Wallet extends React.Component<unknown, IAppState> {
 
         console.log(`Transaction confirmed at round ${confirmedRound}`);
       } catch (err) {
-        this.setState(prevState => {
+        setState((prevState: IAppState) => {
           return {
-            pendingSubmissions: prevState.pendingSubmissions.map((v, i) => {
+            ...prevState,
+            pendingSubmissions: prevState.pendingSubmissions.map((v: any, i: any) => {
               if (index === i) {
                 return err;
               }
@@ -366,9 +390,9 @@ class Wallet extends React.Component<unknown, IAppState> {
         console.error(`Error submitting transaction at index ${index}:`, err);
       }
     });
-  }
+  };
 
-  private stringToChainType(s: string): ChainType {
+  const stringToChainType = (s: string): ChainType => {
     switch (s) {
       case ChainType.MainNet.toString():
         return ChainType.MainNet;
@@ -377,186 +401,182 @@ class Wallet extends React.Component<unknown, IAppState> {
       default:
         throw new Error(`Unknown chain selected: ${s}`);
     }
-  }
+  };
 
-  public render = () => {
-    const {
-      chain,
-      assets,
-      address,
-      connected,
-      fetching,
-      showModal,
-      pendingRequest,
-      pendingSubmissions,
-      result,
-    } = this.state;
+  const {
+    chain,
+    assets,
+    address,
+    connected,
+    fetching,
+    showModal,
+    pendingRequest,
+    pendingSubmissions,
+    result,
+  } = state;
 
-    const nativeCurrency = assets.find((asset: IAssetData) => asset && asset.id === 0) || {
-      id: 0,
-      amount: BigInt(0),
-      creator: "",
-      frozen: false,
-      decimals: 6,
-      name: "Algo",
-      unitName: "Algo",
-    };
+  const nativeCurrency = assets.find((asset: IAssetData) => asset && asset.id === 0) || {
+    id: 0,
+    amount: BigInt(0),
+    creator: "",
+    frozen: false,
+    decimals: 6,
+    name: "Algo",
+    unitName: "Algo",
+  };
 
-    const tokens = assets.filter((asset: IAssetData) => asset && asset.id !== 0);
+  const tokens = assets.filter((asset: IAssetData) => asset && asset.id !== 0);
 
-    return (
-      <>
-        <div className="relative">
-          {fetching && <p>Loading...</p>}
+  return (
+    <>
+      <div className="relative">
+        {fetching && <p>Loading...</p>}
 
-          <div className="border-2 border-black">
-            {!connected || !address ? (
-              <>
-                <div className="bg-gray-100">
-                  <h3>Sign in to WalletConnect to get started</h3>
-                  <button
-                    onClick={this.walletConnectInit}
-                    className="bg-blue-500 rounded-xl text-white px-3 py-2 my-3"
+        <div className="border-2 border-black">
+          {!connected || !address ? (
+            <>
+              <div className="bg-gray-100">
+                <h3>Sign in to WalletConnect to get started</h3>
+                <button
+                  onClick={walletConnectInit}
+                  className="bg-blue-500 rounded-xl text-white px-3 py-2 my-3"
+                >
+                  Connect to WalletConnect
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex bg-blue-200 px-3 py-2">
+                <div className="text-left">
+                  <p>Connected to:</p>
+                  <select
+                    onChange={event => chainUpdate(stringToChainType(event.target.value))}
+                    value={chain}
                   >
-                    Connect to WalletConnect
+                    <option value={ChainType.TestNet}>Algorand TestNet</option>
+                    <option value={ChainType.MainNet}>Algorand MainNet</option>
+                  </select>
+                </div>
+                <div className="flex-grow" />
+                <div>
+                  {/* <Image src={imgUrl} alt={address} /> */}
+                  <p>{ellipseAddress(address)}</p>
+                  <button
+                    onClick={killSession}
+                    className="bg-red-500 px-3 py-2 font-bold rounded-xl"
+                  >
+                    Disconnect
                   </button>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="flex bg-blue-200 px-3 py-2">
-                  <div className="text-left">
-                    <p>Connected to:</p>
-                    <select
-                      onChange={event =>
-                        this.chainUpdate(this.stringToChainType(event.target.value))
-                      }
-                      value={chain}
-                    >
-                      <option value={ChainType.TestNet}>Algorand TestNet</option>
-                      <option value={ChainType.MainNet}>Algorand MainNet</option>
-                    </select>
-                  </div>
-                  <div className="flex-grow" />
-                  <div>
-                    {/* <Image src={imgUrl} alt={address} /> */}
-                    <p>{ellipseAddress(address)}</p>
-                    <button
-                      onClick={this.killSession}
-                      className="bg-red-500 px-3 py-2 font-bold rounded-xl"
-                    >
-                      Disconnect
-                    </button>
-                  </div>
-                </div>
+              </div>
 
-                <div className="border-2 border-black">
-                  <h3>Balances</h3>
-                  <div className="bg-gray-200">
-                    <div key={nativeCurrency.id} className="flex mx-5">
-                      <p>Asset Name: &nbsp; {nativeCurrency.name}</p>
+              <div className="border-2 border-black">
+                <h3>Balances</h3>
+                <div className="bg-gray-200">
+                  <div key={nativeCurrency.id} className="flex mx-5">
+                    <p>Asset Name: &nbsp; {nativeCurrency.name}</p>
+                    <div className="flex-grow" />
+                    <p>{`${formatBigNumWithDecimals(
+                      nativeCurrency.amount,
+                      nativeCurrency.decimals,
+                    )} ${nativeCurrency.unitName || "units"}`}</p>
+                  </div>
+
+                  {tokens.map((token: any) => (
+                    <div key={token.id} className="flex mx-5">
+                      <p>Asset Name: &nbsp; {token.name}</p>
                       <div className="flex-grow" />
                       <p>{`${formatBigNumWithDecimals(
-                        nativeCurrency.amount,
-                        nativeCurrency.decimals,
-                      )} ${nativeCurrency.unitName || "units"}`}</p>
+                        token.amount,
+                        token.decimals,
+                      )} ${token.unitName || "units"}`}</p>
                     </div>
-
-                    {tokens.map(token => (
-                      <div key={token.id} className="flex mx-5">
-                        <p>Asset Name: &nbsp; {token.name}</p>
-                        <div className="flex-grow" />
-                        <p>{`${formatBigNumWithDecimals(
-                          token.amount,
-                          token.decimals,
-                        )} ${token.unitName || "units"}`}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <h3>Actions</h3>
-                  <div className="bg-gray-200">
-                    {scenarios.map(({ name, scenario }) => (
-                      <button
-                        className="bg-blue-500 rounded-xl text-white px-3 py-2 m-3"
-                        key={name}
-                        onClick={() => this.signTxnScenario(scenario)}
-                      >
-                        {name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          <Modal show={showModal} toggleModal={this.toggleModal}>
-            {pendingRequest ? (
-              <div className=" relative">
-                <h1>Pending Call Request</h1>
-                <div>
-                  <p>Loading...</p>
-                  <p>Approve or reject request using your wallet</p>
-                </div>
-              </div>
-            ) : result ? (
-              <div className="relative">
-                <h1>Call Request Approved</h1>
-                <table>
-                  <tr>
-                    <th>Method</th>
-                    <th>{result.method}</th>
-                  </tr>
-                  {result.body.map((signedTxns, index) => (
-                    <tr key={index}>
-                      <th>{`Atomic group ${index}`}</th>
-                      <th>
-                        {signedTxns.map((txn, txnIndex) => (
-                          <div key={txnIndex}>
-                            {!!txn?.txID && <p>TxID: {txn.txID}</p>}
-                            {!!txn?.signature && <p>Sig: {txn.signature}</p>}
-                            {!!txn?.signingAddress && <p>AuthAddr: {txn.signingAddress}</p>}
-                          </div>
-                        ))}
-                      </th>
-                    </tr>
                   ))}
-                </table>
-                <button
-                  onClick={() => this.submitSignedTransaction()}
-                  disabled={pendingSubmissions.length !== 0}
-                >
-                  Submit transaction to network.
-                </button>
-                {pendingSubmissions.map((submissionInfo, index) => {
-                  const key = `${index}:${
-                    typeof submissionInfo === "number" ? submissionInfo : "err"
-                  }`;
-                  const prefix = `Txn Group ${index}: `;
-                  let content: string;
+                </div>
 
-                  if (submissionInfo === 0) {
-                    content = "Submitting...";
-                  } else if (typeof submissionInfo === "number") {
-                    content = `Confirmed at round ${submissionInfo}`;
-                  } else {
-                    content = "Rejected by network. See console for more information.";
-                  }
-
-                  return <h1 key={key}>{prefix + content}</h1>;
-                })}
+                <h3>Actions</h3>
+                <div className="bg-gray-200">
+                  {scenarios.map(({ name, scenario }) => (
+                    <button
+                      className="bg-blue-500 rounded-xl text-white px-3 py-2 m-3"
+                      key={name}
+                      onClick={() => signTxnScenario(scenario)}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
               </div>
-            ) : (
-              <div className="relative">
-                <h1>Call Request Rejected</h1>
-              </div>
-            )}
-          </Modal>
+            </>
+          )}
         </div>
-      </>
-    );
-  };
-}
+
+        <Modal show={showModal} toggleModal={toggleModal}>
+          {pendingRequest ? (
+            <div className=" relative">
+              <h1>Pending Call Request</h1>
+              <div>
+                <p>Loading...</p>
+                <p>Approve or reject request using your wallet</p>
+              </div>
+            </div>
+          ) : result ? (
+            <div className="relative">
+              <h1>Call Request Approved</h1>
+              <table>
+                <tr>
+                  <th>Method</th>
+                  <th>{result.method}</th>
+                </tr>
+                {result.body.map((signedTxns: any, index: any) => (
+                  <tr key={index}>
+                    <th>{`Atomic group ${index}`}</th>
+                    <th>
+                      {signedTxns.map((txn: any, txnIndex: any) => (
+                        <div key={txnIndex}>
+                          {!!txn?.txID && <p>TxID: {txn.txID}</p>}
+                          {!!txn?.signature && <p>Sig: {txn.signature}</p>}
+                          {!!txn?.signingAddress && <p>AuthAddr: {txn.signingAddress}</p>}
+                        </div>
+                      ))}
+                    </th>
+                  </tr>
+                ))}
+              </table>
+              <button
+                onClick={() => submitSignedTransaction()}
+                disabled={pendingSubmissions.length !== 0}
+              >
+                Submit transaction to network.
+              </button>
+              {pendingSubmissions.map((submissionInfo: any, index: any) => {
+                const key = `${index}:${
+                  typeof submissionInfo === "number" ? submissionInfo : "err"
+                }`;
+                const prefix = `Txn Group ${index}: `;
+                let content: string;
+
+                if (submissionInfo === 0) {
+                  content = "Submitting...";
+                } else if (typeof submissionInfo === "number") {
+                  content = `Confirmed at round ${submissionInfo}`;
+                } else {
+                  content = "Rejected by network. See console for more information.";
+                }
+
+                return <h1 key={key}>{prefix + content}</h1>;
+              })}
+            </div>
+          ) : (
+            <div className="relative">
+              <h1>Call Request Rejected</h1>
+            </div>
+          )}
+        </Modal>
+      </div>
+    </>
+  );
+};
 
 export default Wallet;
