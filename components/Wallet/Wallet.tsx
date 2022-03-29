@@ -5,11 +5,10 @@ import { IInternalEvent } from "@walletconnect/types";
 import { formatJsonRpcRequest } from "@json-rpc-tools/utils";
 import algosdk from "algosdk";
 import Modal from "./Modal";
-import Header from "./Header";
 import { apiGetAccountAssets, apiSubmitTransactions, ChainType } from "../../helpers/api";
 import { IAssetData, IWalletTransaction, SignTxnParams } from "../../helpers/types";
-import AccountAssets from "./AccountAssets";
 import { Scenario, scenarios, signTxnWithTestAccount } from "../../scenarios";
+import { ellipseAddress, formatBigNumWithDecimals } from "helpers/utilities";
 
 interface IResult {
   method: string;
@@ -369,6 +368,17 @@ class Wallet extends React.Component<unknown, IAppState> {
     });
   }
 
+  private stringToChainType(s: string): ChainType {
+    switch (s) {
+      case ChainType.MainNet.toString():
+        return ChainType.MainNet;
+      case ChainType.TestNet.toString():
+        return ChainType.TestNet;
+      default:
+        throw new Error(`Unknown chain selected: ${s}`);
+    }
+  }
+
   public render = () => {
     const {
       chain,
@@ -382,42 +392,103 @@ class Wallet extends React.Component<unknown, IAppState> {
       result,
     } = this.state;
 
+    const nativeCurrency = assets.find((asset: IAssetData) => asset && asset.id === 0) || {
+      id: 0,
+      amount: BigInt(0),
+      creator: "",
+      frozen: false,
+      decimals: 6,
+      name: "Algo",
+      unitName: "Algo",
+    };
+
+    const tokens = assets.filter((asset: IAssetData) => asset && asset.id !== 0);
+
     return (
       <>
         <div className="relative">
-          <div>
-            <Header
-              connected={connected}
-              address={address}
-              killSession={this.killSession}
-              chain={chain}
-              chainUpdate={this.chainUpdate}
-            />
-            <div>
-              {fetching && <p>Loading...</p>}
-              {!address && !assets.length ? 
+          {fetching && <p>Loading...</p>}
+
+          <div className="border-2 border-black">
+            {!connected || !address ? (
+              <>
                 <div className="bg-gray-100">
                   <h3>Sign in to WalletConnect to get started</h3>
-                  <button onClick={this.walletConnectInit} className='bg-blue-500 rounded-xl text-white px-3 py-2 my-3'>
+                  <button
+                    onClick={this.walletConnectInit}
+                    className="bg-blue-500 rounded-xl text-white px-3 py-2 my-3"
+                  >
                     Connect to WalletConnect
                   </button>
-                </div> : 
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex bg-blue-200 px-3 py-2">
+                  <div className="text-left">
+                    <p>Connected to:</p>
+                    <select
+                      onChange={event =>
+                        this.chainUpdate(this.stringToChainType(event.target.value))
+                      }
+                      value={chain}
+                    >
+                      <option value={ChainType.TestNet}>Algorand TestNet</option>
+                      <option value={ChainType.MainNet}>Algorand MainNet</option>
+                    </select>
+                  </div>
+                  <div className="flex-grow" />
+                  <div>
+                    {/* <Image src={imgUrl} alt={address} /> */}
+                    <p>{ellipseAddress(address)}</p>
+                    <button
+                      onClick={this.killSession}
+                      className="bg-red-500 px-3 py-2 font-bold rounded-xl"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                </div>
+
                 <div className="border-2 border-black">
                   <h3>Balances</h3>
-                  <AccountAssets assets={assets} />
+                  <div className="bg-gray-200">
+                    <div key={nativeCurrency.id} className="flex mx-5">
+                      <p>Asset Name: &nbsp; {nativeCurrency.name}</p>
+                      <div className="flex-grow" />
+                      <p>{`${formatBigNumWithDecimals(
+                        nativeCurrency.amount,
+                        nativeCurrency.decimals,
+                      )} ${nativeCurrency.unitName || "units"}`}</p>
+                    </div>
+
+                    {tokens.map(token => (
+                      <div key={token.id} className="flex mx-5">
+                        <p>Asset Name: &nbsp; {token.name}</p>
+                        <div className="flex-grow" />
+                        <p>{`${formatBigNumWithDecimals(
+                          token.amount,
+                          token.decimals,
+                        )} ${token.unitName || "units"}`}</p>
+                      </div>
+                    ))}
+                  </div>
+
                   <h3>Actions</h3>
                   <div className="bg-gray-200">
                     {scenarios.map(({ name, scenario }) => (
-                      <button className='bg-blue-500 rounded-xl text-white px-3 py-2 m-3'
-                        key={name} 
-                        onClick={() => this.signTxnScenario(scenario)}>
+                      <button
+                        className="bg-blue-500 rounded-xl text-white px-3 py-2 m-3"
+                        key={name}
+                        onClick={() => this.signTxnScenario(scenario)}
+                      >
                         {name}
                       </button>
                     ))}
                   </div>
                 </div>
-              }
-            </div>
+              </>
+            )}
           </div>
 
           <Modal show={showModal} toggleModal={this.toggleModal}>
@@ -488,4 +559,4 @@ class Wallet extends React.Component<unknown, IAppState> {
   };
 }
 
-export default Wallet
+export default Wallet;
