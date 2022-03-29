@@ -11,9 +11,9 @@ const BlockinHeader = ({togglePopup}: {togglePopup: any}) => {
                   <h1 className='text-sm font-semibold'>{headerTitle}</h1>
               </div>
               <div className='flex-grow' />
-              <button onClick={() => togglePopup(true)} className='text-sm font-semibold bg-gradient-to-b from-yellow-300 to-yellow-600 p-2 shadow-md rounded-xl'>
+              {/* <button onClick={() => togglePopup(true)} className='text-sm font-semibold bg-gradient-to-b from-yellow-300 to-yellow-600 p-2 shadow-md rounded-xl'>
                   DONATE
-              </button>
+              </button> */}
             </header>
         </>
     )
