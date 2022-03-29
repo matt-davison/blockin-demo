@@ -2,7 +2,7 @@ import { KeyIcon } from "./icons"
 
 const headerTitle = "BLOCKIN DEMO"
 
-const BlockinHeader = ({togglePopup}: {togglePopup: any}) => {
+const BlockinHeader = () => {
     return (
         <>
             <header className=' bg-gradient-to-b from-gray-700 to-gray-900 px-3 md:pl-5 md:pr-10 py-3 flex items-center justify-start space-x-5'>
@@ -11,9 +11,6 @@ const BlockinHeader = ({togglePopup}: {togglePopup: any}) => {
                   <h1 className='text-sm font-semibold'>{headerTitle}</h1>
               </div>
               <div className='flex-grow' />
-              {/* <button onClick={() => togglePopup(true)} className='text-sm font-semibold bg-gradient-to-b from-yellow-300 to-yellow-600 p-2 shadow-md rounded-xl'>
-                  DONATE
-              </button> */}
             </header>
         </>
     )
