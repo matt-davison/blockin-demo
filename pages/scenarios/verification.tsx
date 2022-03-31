@@ -53,7 +53,7 @@ connector.on("disconnect", (error, payload) => {
 
 const signChallenge = async () => {
     const message = await createChallenge('https://vt.edu', 'Blockin', connector.accounts[0], '');
-    console.log(message);
+    console.log("CREATED CHALLENGE", message);
 
     const suggestedParams = await apiGetTxnParams(ChainType.TestNet);
 
@@ -69,8 +69,8 @@ const signChallenge = async () => {
     const txns = [txn];
     const txnsToSign = txns.map(txn => {
         const encodedTxn = Buffer.from(algosdk.encodeUnsignedTransaction(txn)).toString("base64");
-        console.log("ENCODED TXN BASE 64 STRING", encodedTxn);
-        console.log("NOT BUFFERED", algosdk.encodeUnsignedTransaction(txn))
+        // console.log("ENCODED TXN BASE 64 STRING", encodedTxn);
+        // console.log("NOT BUFFERED", algosdk.encodeUnsignedTransaction(txn))
         return {
             txn: encodedTxn,
             message
@@ -85,7 +85,7 @@ const signChallenge = async () => {
         return element ? new Uint8Array(Buffer.from(element, "base64")) : null;
     });
 
-    console.log(decodedResult);
+    // console.log(decodedResult);
 
     const txnsFormatted = [
         {
@@ -141,7 +141,7 @@ const signChallenge = async () => {
             }
 
             const signedTxn = algosdk.decodeSignedTransaction(rawSignedTxn);
-            console.log(signedTxn);
+            // console.log(signedTxn);
 
             const txn = (signedTxn.txn as unknown) as algosdk.Transaction;
             const txID = txn.txID();
@@ -157,7 +157,7 @@ const signChallenge = async () => {
                 throw new Error(`Signature not present on transaction at index ${i}`);
             }
 
-            console.log("SIGNED TXN SIG IN FUNC", signedTxn.sig);
+            // console.log("SIGNED TXN SIG IN FUNC", signedTxn.sig);
 
             return {
                 txID,
@@ -203,7 +203,7 @@ export default function VerificationPage() {
                 <title>Verification - Challenge/Response</title>
             </Head>
             <Wallet />
-            <button onClick={signChallenge}> Sign Opt In</button>
+            <button onClick={signChallenge}> Sign Challenge</button>
         </Layout>
     )
 }
