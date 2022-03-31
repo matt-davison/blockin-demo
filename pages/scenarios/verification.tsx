@@ -1,62 +1,24 @@
-import { createChallenge, makeAssetOptInTxn, verifyChallenge } from 'blockin'
+import { createChallenge, verifyChallenge } from 'blockin'
 import Layout from '../../components/layout'
 import Head from 'next/head'
 import React from 'react'
-import WalletConnect from "@walletconnect/client";
-import QRCodeModal from "algorand-walletconnect-qrcode-modal";
-import algosdk, { decodeAddress, decodeSignedTransaction, mnemonicToSecretKey, signTransaction } from "algosdk";
+import algosdk from "algosdk";
 import { formatJsonRpcRequest } from "@json-rpc-tools/utils";
 import Wallet from 'components/Wallet/Wallet';
-import { Scenario, ScenarioReturnType, signTxnWithTestAccount } from 'scenarios';
+import { ScenarioReturnType } from 'scenarios';
 import { apiGetTxnParams, ChainType } from 'helpers/api';
-import { connect } from 'http2';
-import nacl, { verify } from 'tweetnacl';
-import { Account } from 'algosdk/dist/types/src/client/v2/algod/models/types';
+import { connector } from '../../helpers/walletconnect';
 
-// Create a connector
-const connector = new WalletConnect({
-    bridge: "https://bridge.walletconnect.org", // Required
-    qrcodeModal: QRCodeModal,
-});
-
-// Check if connection is already established
-if (!connector.connected) {
-    // create new session
-    connector.createSession();
-}
-
-// Subscribe to connection events
-connector.on("connect", (error, payload) => {
-    if (error) {
-        throw error;
-    }
-
-    // Get provided accounts
-    const { accounts } = payload.params[0];
-    console.log(accounts)
-});
-
-connector.on("session_update", (error, payload) => {
-    if (error) {
-        throw error;
-    }
-
-    // Get updated accounts 
-    const { accounts } = payload.params[0];
-});
-
-connector.on("disconnect", (error, payload) => {
-    if (error) {
-        throw error;
-    }
-});
-
-const signChallenge = async () => {
+const getChallengeFromBlockin = async (): Promise<string> => {
+    //we can also make these parameters inputs to the overall function to be more dynamic
     const message = await createChallenge('https://vt.edu', 'Blockin', connector.accounts[0], '');
     console.log("CREATED CHALLENGE", message);
 
-    const suggestedParams = await apiGetTxnParams(ChainType.TestNet);
+    return message
+}
 
+const constructTxnObject = async (message: string): Promise<algosdk.Transaction> => {
+    const suggestedParams = await apiGetTxnParams(ChainType.TestNet);
 
     const txn = await algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         from: connector.accounts[0],
@@ -66,39 +28,21 @@ const signChallenge = async () => {
         suggestedParams,
     });
 
-    const txns = [txn];
-    const txnsToSign = txns.map(txn => {
-        const encodedTxn = Buffer.from(algosdk.encodeUnsignedTransaction(txn)).toString("base64");
-        // console.log("ENCODED TXN BASE 64 STRING", encodedTxn);
-        // console.log("NOT BUFFERED", algosdk.encodeUnsignedTransaction(txn))
-        return {
-            txn: encodedTxn,
-            message
-        };
-    });
+    return txn;
+}
 
-    const requestParams = [txnsToSign];
-    const request = formatJsonRpcRequest("algo_signTxn", requestParams);
-    const result: Array<string | null> = await connector.sendCustomRequest(request);
-    console.log("Raw response:", result);
-    const decodedResult = result.map(element => {
-        return element ? new Uint8Array(Buffer.from(element, "base64")) : null;
-    });
 
-    // console.log(decodedResult);
-
-    const txnsFormatted = [
-        {
-            txn,
-            message
-        },
-    ];
-
-    const txnsArr: ScenarioReturnType = [txnsFormatted];
+//confusing algoSDK stuff
+const parseSignedTransactions = async (txnsFormattedForAlgoSdk: ScenarioReturnType, result: Array<string | null>):
+    Promise<Array<Array<{
+        txID: string;
+        signingAddress?: string;
+        signature: string;
+    } | null>>> => {
 
     const indexToGroup = (index: number) => {
-        for (let group = 0; group < txnsArr.length; group++) {
-            const groupLength = txnsArr[group].length;
+        for (let group = 0; group < txnsFormattedForAlgoSdk.length; group++) {
+            const groupLength = txnsFormattedForAlgoSdk[group].length;
             if (index < groupLength) {
                 return [group, index];
             }
@@ -109,10 +53,10 @@ const signChallenge = async () => {
         throw new Error(`Index too large for groups: ${index}`);
     };
 
-    const signedPartialTxns: Array<Array<Uint8Array | null>> = txnsArr.map(() => []);
+    const signedPartialTxns: Array<Array<Uint8Array | null>> = txnsFormattedForAlgoSdk.map(() => []);
     result.forEach((r, i) => {
         const [group, groupIndex] = indexToGroup(i);
-        const toSign = txnsArr[group][groupIndex];
+        const toSign = txnsFormattedForAlgoSdk[group][groupIndex];
 
         if (r == null) {
             if (toSign.signers !== undefined && toSign.signers?.length < 1) {
@@ -145,7 +89,7 @@ const signChallenge = async () => {
 
             const txn = (signedTxn.txn as unknown) as algosdk.Transaction;
             const txID = txn.txID();
-            const unsignedTxID = txnsArr[group][i].txn.txID();
+            const unsignedTxID = txnsFormattedForAlgoSdk[group][i].txn.txID();
 
             if (txID !== unsignedTxID) {
                 throw new Error(
@@ -167,32 +111,56 @@ const signChallenge = async () => {
         });
     });
 
+    return signedTxnInfo;
+}
+
+
+const signChallenge = async () => {
+    const message = await getChallengeFromBlockin();
+
+    const txn = await constructTxnObject(message);
+
+    //This step was a bit weird and confusing. AlgoSDK Parsing of txns and wallet connect params 
+    //had two slightly different formats
+    const txnsToSignInWalletConnectFormat = [
+        {
+            txn: Buffer.from(algosdk.encodeUnsignedTransaction(txn)).toString("base64"),
+            message
+        }
+    ];
+
+    const txnsFormattedForAlgoSdk: ScenarioReturnType = [
+        [
+            {
+                txn,
+                message
+            },
+        ]
+    ];
+
+    //Send Wallet Connect algo_signTxn request; waits here until you accept within wallet
+    const requestParams = [txnsToSignInWalletConnectFormat];
+    const request = formatJsonRpcRequest("algo_signTxn", requestParams);
+    const result: Array<string | null> = await connector.sendCustomRequest(request);
+    console.log("Raw response:", result);
+
+    //Confusing AlgoSDK parsing stuff; returns a 2D array of the signed txns (since we have one 
+    //txn and no groups, only [0][0] is defined)
+    const signedTxnInfo = await parseSignedTransactions(txnsFormattedForAlgoSdk, result);
     console.log("Signed txn info:", signedTxnInfo);
+
+    //Get signature and call blockin's verifyChallenge
     if (signedTxnInfo && signedTxnInfo[0] && signedTxnInfo[0][0]) {
+        //Get Uint8Arrays of a) the bytes that were signed and b) the signature
         const signature = Buffer.from(signedTxnInfo[0][0].signature, 'base64');
         const txnBytes = new Uint8Array(txn.bytesToSign());
 
-        // console.log();
-
+        //Blockin verify
+        //Note: It will always return a string and should never throw an error
+        //Returns "Successfully granted access via Blockin" upon success
         const verified = await verifyChallenge(txnBytes, signature);
         console.log(verified);
-    } else {
-        throw 'Error: should not reach here';
     }
-
-
-
-
-
-    //     signedTxnInfo.forEach(async (elem) => {
-    //         if (elem && elem[0] && elem[0].signature) {
-
-    //             console.log(res);
-    //         }
-    //     });
-    // }
-
-
 };
 
 

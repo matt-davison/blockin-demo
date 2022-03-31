@@ -11,18 +11,20 @@ const testNetClient = new algosdk.Algodv2("", "https://testnet.algoexplorerapi.i
 
 
 const pureStakeTestNetClientUrl = "https://testnet-algorand.api.purestake.io/ps2";
+const pureStakeMainNetClientUrl = "https://mainnet-algorand.api.purestake.io/ps2";
 const port = "";
 const token = {
     "x-api-key": "H4sefDbnoL8GO8ooRkxQM6CePHih5XDQ405mcBKy" // fill in yours
 };
 const pureStakeTestNetClient = new algosdk.Algodv2(token, pureStakeTestNetClientUrl, port);
+const pureStakeMainNetClient = new algosdk.Algodv2(token, pureStakeTestNetClientUrl, port);
 
 
 
 function clientForChain(chain: ChainType): algosdk.Algodv2 {
     switch (chain) {
         case ChainType.MainNet:
-            return mainNetClient;
+            return pureStakeMainNetClient;
         case ChainType.TestNet:
             return pureStakeTestNetClient;
         default:
