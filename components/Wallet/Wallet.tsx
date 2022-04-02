@@ -5,10 +5,10 @@ import { IInternalEvent } from "@walletconnect/types";
 import { formatJsonRpcRequest } from "@json-rpc-tools/utils";
 import algosdk from "algosdk";
 import Modal from "./Modal";
-import { apiGetAccountAssets, apiSubmitTransactions, ChainType } from "../../helpers/api";
-import { IAssetData, IWalletTransaction, SignTxnParams } from "../../helpers/types";
+import { apiGetAccountAssets, apiSubmitTransactions, ChainType } from "@helpers/api";
+import { IAssetData, IWalletTransaction, SignTxnParams } from "@helpers/types";
 import { Scenario, scenarios, signTxnWithTestAccount } from "../../scenarios";
-import { ellipseAddress, formatBigNumWithDecimals } from "helpers/utilities";
+import { ellipseAddress, formatBigNumWithDecimals } from "@helpers/utilities";
 import { useState } from "react";
 
 interface IResult {

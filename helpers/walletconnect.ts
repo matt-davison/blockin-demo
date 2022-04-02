@@ -1,4 +1,3 @@
-
 import { formatJsonRpcRequest } from "@json-rpc-tools/utils";
 import WalletConnect from "@walletconnect/client";
 import QRCodeModal from "algorand-walletconnect-qrcode-modal";
