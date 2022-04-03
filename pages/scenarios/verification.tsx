@@ -1,13 +1,14 @@
 import { createChallenge, verifyChallenge } from 'blockin'
 import Layout from '../../components/layout'
 import Head from 'next/head'
-import React from 'react'
+import React, { useState } from 'react'
 import algosdk from "algosdk";
 import { formatJsonRpcRequest } from "@json-rpc-tools/utils";
 import Wallet from 'components/Wallet/Wallet';
 import { ScenarioReturnType } from 'scenarios';
 import { apiGetTxnParams, ChainType } from 'helpers/api';
 import { connector } from '../../helpers/walletconnect';
+import { FailuerIcon, LoadIcon, SuccessIcon } from '@components/icons';
 
 const getChallengeFromBlockin = async (): Promise<string> => {
     //we can also make these parameters inputs to the overall function to be more dynamic
@@ -141,8 +142,17 @@ const signChallenge = async () => {
     //Send Wallet Connect algo_signTxn request; waits here until you accept within wallet
     const requestParams = [txnsToSignInWalletConnectFormat];
     const request = formatJsonRpcRequest("algo_signTxn", requestParams);
+
+    // This is where the request gets sent to the wallet...
     const result: Array<string | null> = await connector.sendCustomRequest(request);
+    alert("done")
+    if (result == null) {
+        alert("Challenge failed!")
+        return false
+    }
+
     console.log("Raw response:", result);
+    console.log(result)
 
     //Confusing AlgoSDK parsing stuff; returns a 2D array of the signed txns (since we have one 
     //txn and no groups, only [0][0] is defined)
@@ -160,18 +170,76 @@ const signChallenge = async () => {
         //Returns "Successfully granted access via Blockin" upon success
         const verified = await verifyChallenge(txnBytes, signature);
         console.log(verified);
+        return true
+    }
+    else {
+        alert("Challenge failed")
+        return false
     }
 };
 
+const loadingScreen = <>
+    <LoadIcon className='w-10 h-10 mx-auto text-blue-500 ' />
+    <p className='pt-10'>Go to your wallet and accept the challenge request...</p>
+</>
+
+const successScreen = <div>
+    <div className='flex justify-center items-center space-x-1'>
+        <SuccessIcon className='w-10 h-10 text-green-500' />
+        <p className='font-bold'>Challenge succeeded!</p>
+        <SuccessIcon className='w-10 h-10 text-green-500' />
+    </div>
+    <p>You are now authenticated</p>
+</div>
+
+const failureScreen = <div>
+    <div className='flex justify-center items-center space-x-1'>
+        <FailuerIcon className='w-10 h-10 text-red-500' />
+        <p className='font-bold'>Challenge failed!</p>
+        <FailuerIcon className='w-10 h-10 text-red-500' />
+    </div>
+    <p>You are NOT authenticated</p>
+</div>
 
 export default function VerificationPage() {
+    const [signingChallenge, setSigningChallenge] = useState(false)
+    const [message, setMessage] = useState(loadingScreen)
+
+    const handleChallenge = async () => {
+        setSigningChallenge(true)
+        if (await signChallenge()) {
+            setMessage(successScreen)
+        }
+        else {
+            setMessage(failureScreen)
+        }
+    }
+
     return (
         <Layout>
             <Head>
                 <title>Verification - Challenge/Response</title>
             </Head>
-            <Wallet />
-            <button onClick={signChallenge}> Sign Challenge</button>
+            <div className='text-center mt-20'>
+                {
+                    signingChallenge ?
+                    <>
+                        {message}
+                    </> :
+                    <>
+                        <div className="">
+                            <h3>Sign in to WalletConnect to get started</h3>
+                            <button
+                            onClick={walletConnectInit}
+                            className="bg-blue-500 rounded-xl text-white px-3 py-2 my-3"
+                            >
+                            Connect to WalletConnect
+                            </button>
+                        </div>
+                        <button className='bg-blue-500 rounded-xl text-white px-3 py-2' onClick={handleChallenge}> Sign Challenge</button>
+                    </>
+                }
+            </div>
         </Layout>
     )
 }
