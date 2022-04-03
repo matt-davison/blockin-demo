@@ -227,15 +227,7 @@ export default function VerificationPage() {
                         {message}
                     </> :
                     <>
-                        <div className="">
-                            <h3>Sign in to WalletConnect to get started</h3>
-                            <button
-                            onClick={walletConnectInit}
-                            className="bg-blue-500 rounded-xl text-white px-3 py-2 my-3"
-                            >
-                            Connect to WalletConnect
-                            </button>
-                        </div>
+                        <Wallet />
                         <button className='bg-blue-500 rounded-xl text-white px-3 py-2' onClick={handleChallenge}> Sign Challenge</button>
                     </>
                 }
