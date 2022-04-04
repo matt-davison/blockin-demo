@@ -52,9 +52,9 @@ async function signAssetCreateTxn(assetAuthorization: string) {
     // txns is an array of algosdk.Transaction like below
     // i.e txns = [txn, ...someotherTxns], but we've only built one transaction in our case
     console.log("SHA 256")
-    console.log(assetAuthorization)
-    console.log(await sha256(assetAuthorization))
-    const txns = [await makeAssetCreateTxn(connector.accounts[0], "Blockin", "AUTH", 1, "blockin-demo", await sha256(assetAuthorization))] //TODO: not an asset we made, just for testing
+    console.log(connector.accounts[0] + "_SITESECRET_" + assetAuthorization)
+    console.log(await sha256(connector.accounts[0] + "_SITESECRET_" + assetAuthorization))
+    const txns = [await makeAssetCreateTxn(connector.accounts[0], "Blockin", "AUTH", 1, "blockin-demo", await sha256(assetAuthorization))]
     const txnsToSign = txns.map(txn => {
         const encodedTxn = Buffer.from(algosdk.encodeUnsignedTransaction(txn)).toString("base64");
 
